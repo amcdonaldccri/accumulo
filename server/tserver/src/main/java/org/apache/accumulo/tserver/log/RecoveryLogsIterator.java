@@ -92,20 +92,20 @@ public class RecoveryLogsIterator
             cacheProvider);
       }
 
-      for (Path entry : logFiles) {
+      for (Path log : logFiles) {
         FileSKVIterator fileIter =
-            openLogFile(context, entry, cryptoService, fs, fileLenCache, cacheProvider);
+            openLogFile(context, log, cryptoService, fs, fileLenCache, cacheProvider);
         if (range != null) {
           fileIter.seek(range, Collections.emptySet(), false);
         }
         Iterator<Entry<Key,Value>> scanIter = new IteratorAdapter(fileIter);
 
         if (scanIter.hasNext()) {
-          LOG.debug("Write ahead log {} has data in range {} {}", entry.getName(), start, end);
+          LOG.debug("Write ahead log {} has data in range {} {}", log.getName(), start, end);
           iterators.add(scanIter);
           fileIters.add(fileIter);
         } else {
-          LOG.debug("Write ahead log {} has no data in range {} {}", entry.getName(), start, end);
+          LOG.debug("Write ahead log {} has no data in range {} {}", log.getName(), start, end);
           fileIter.close();
         }
       }
