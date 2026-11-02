@@ -65,8 +65,8 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 /**
  * Central logging facility for the TServerInfo.
@@ -578,8 +578,13 @@ public class TabletServerLogger {
     VolumeManager fs = tserver.getContext().getVolumeManager();
     for (var logEntry : walogs) {
       try {
-        ResolvedSortedLog resolvedLog =
-            sortedLogCache.get(logEntry, () -> ResolvedSortedLog.resolve(logEntry, fs));
+        ResolvedSortedLog resolvedLog = sortedLogCache.get(logEntry, k -> {
+          try {
+            return ResolvedSortedLog.resolve(logEntry, fs);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
         sortedLogs.add(resolvedLog);
       } catch (Exception e) {
         throw new IOException("Failed to resolve sorted log for " + logEntry.filename, e);
